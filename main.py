@@ -1,5 +1,13 @@
 import os
 import re
+import re
+import unicodedata
+
+def clean_filename(name):
+    name = unicodedata.normalize("NFKD", name)                   # invisible char fix
+    name = re.sub(r'[^\w\s-]', '', name)                         # remove unsafe symbols
+    name = re.sub(r'\s+', ' ', name).strip()                     # multiple spaces fix
+    return name.replace(" ", "_")                                # optional: _ instead of space              # make filename safe
 import sys
 import m3u8
 import json
@@ -409,8 +417,9 @@ async def txt_handler(bot: Client, m: Message):
             Vxy = links[i][1].replace("www.youtube-nocookie.com/embed", "youtu.be")
             url = "https://" + Vxy
 
-            name1 = links[i][0].replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "")
-            name = f'{name1[:60]} {CREDIT}'
+            name1_raw = links[i][0]
+            name1 = clean_filename(name1_raw)
+            name = f'{name1[:60]}_{CREDIT}'     # optional underscore
 
             if "youtube.com" in url or "youtu.be" in url:
                 prog = await m.reply_text(f"<i><b>Audio Downloading</b></i>\n<blockquote><b>{str(count).zfill(3)}) {name1}</b></blockquote>")
@@ -1398,8 +1407,13 @@ async def text_handler(bot: Client, m: Message):
             Vxy = link.replace("file/d/","uc?export=download&id=").replace("www.youtube-nocookie.com/embed", "youtu.be").replace("?modestbranding=1", "").replace("/view?usp=sharing","")
             url = Vxy
 
-            name1 = links.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
-            name = f'{name1[:60]}'
+            name1_raw = links[i][0]
+            name1 = clean_filename(name1_raw)
+
+           if "," in raw_text3:
+                name = f'{PRENAME}_{name1[:60]}'
+           else:
+                name = f'{name1[:60]}'
             
             if "visionias" in url:
                 async with ClientSession() as session:
